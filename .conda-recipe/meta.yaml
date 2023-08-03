@@ -1,0 +1,27 @@
+package:
+  name: 'onoff'
+  version: '1.0.1_py3'
+
+build:
+  # If this is a new build for the same version, increment the build
+  # number. If you do not include this key, it defaults to 0.
+  number: 0
+  script: python setup.py install --single-version-externally-managed --record record.txt
+  noarch: python
+
+requirements:
+  build:
+    - python >=3.6
+
+  run:
+    - python >=3.6
+
+about:
+  home: https://github.com/liftoff/onoff
+  license: Apache 2.0
+  author: Dan McDougall <daniel.mcdougall@liftoffsoftware.com>
+  summary: A universal mixin to add on(), off(), and trigger() style event handling to any Python class.
+  description: A really handy way to add on(), off(), and trigger() styled events to any Python class.
+
+source:
+  path: ..

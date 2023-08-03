@@ -29,10 +29,9 @@ styled events to any Python class.  A quick example::
     Hello: Triggered events rock!
 """
 
+from typing import List, Union, Callable
 import logging
 
-if bytes != str: # Python 3
-    unicode = str # Necessary for a type check below
 
 class OnOffMixin(object):
     """
@@ -95,7 +94,12 @@ class OnOffMixin(object):
     In the above example we used the `OnOffMixin` to add :func:`on`,
     :func:`off`, and :func:`trigger` methods to our `ActionWebSocket` class.
     """
-    def on(self, events, callback, times=None):
+
+    def __init__(self):
+        self._on_off_events = {}
+        self.exc_info = None
+
+    def on(self, events: Union[str, List[str]], callback: Callable, times: int = None) -> None:
         """
         Registers the given *callback* with the given *events* (string or list
         of strings) that will get called whenever the given *event* is triggered
@@ -104,44 +108,33 @@ class OnOffMixin(object):
         If *times* is given the *callback* will only be fired that many times
         before it is automatically removed from :attr:`self._on_off_events`.
         """
-        # Make sure our _on_off_events dict is present (if first invokation)
-        if not hasattr(self, '_on_off_events'):
-            self._on_off_events = {}
-        if isinstance(events, (str, unicode)):
+        if isinstance(events, str):
             events = [events]
-        callback_obj = {
-            'callback': callback,
-            'times': times,
-            'calls': 0
-        }
-        for event in events:
-            if event not in self._on_off_events:
-                self._on_off_events.update({event: [callback_obj.copy()]})
-            else:
-                self._on_off_events[event].append(callback_obj.copy())
 
-    def off(self, events, callback):
+        callback_obj = {'callback': callback, 'times': times, 'calls': 0}
+
+        for event in events:
+            self._on_off_events.setdefault(event, []).append(callback_obj.copy())
+
+    def off(self, events: Union[str, List[str]], callback: Callable) -> None:
         """
         Removes the given *callback* from the given *events* (string or list of
         strings).
         """
-        if isinstance(events, (str, unicode)):
+        if isinstance(events, str):
             events = [events]
-        for event in events:
-            for callback_obj in self._on_off_events[event]:
-                if callback_obj['callback'] == callback:
-                    try:
-                        del self._on_off_events[event]
-                    except KeyError:
-                        pass # Nothing to do
 
-    def once(self, events, callback):
+        for event in events:
+            self._on_off_events[event] = [callback_obj for callback_obj in self._on_off_events[event]
+                                          if callback_obj['callback'] != callback]
+
+    def once(self, events: Union[str, List[str]], callback: Callable) -> None:
         """
         A shortcut for `self.on(events, callback, 1)`
         """
         self.on(events, callback, 1)
 
-    def trigger(self, events, *args, **kwargs):
+    def trigger(self, events: Union[str, List[str]], *args, **kwargs) -> None:
         """
         Fires the given *events* (string or list of strings).  All callbacks
         associated with these *events* will be called and if their respective
@@ -151,14 +144,11 @@ class OnOffMixin(object):
         If given, callbacks associated with the given *events* will be called
         with *args* and *kwargs*.
         """
-        # Make sure our _on_off_events dict is present (if first invokation)
-        if not hasattr(self, '_on_off_events'):
-            self._on_off_events = {}
-        if not hasattr(self, 'exc_info'):
-            self.exc_info = None
-        logging.debug("OnOffMixin triggering event(s): %s" % events)
-        if isinstance(events, (str, unicode)):
+        logging.debug(f"OnOffMixin triggering event(s): {events}")
+
+        if isinstance(events, str):
             events = [events]
+
         for event in events:
             if event in self._on_off_events:
                 for callback_obj in self._on_off_events[event]:

@@ -33,7 +33,7 @@ from typing import List, Union, Callable
 import logging
 
 
-class OnOffMixin(object):
+class OnOffMixin:
     """
     A mixin to add :func:`on`, :func:`off`, and :func:`trigger` event handling
     methods to any class.

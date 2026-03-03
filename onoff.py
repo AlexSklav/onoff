@@ -71,7 +71,7 @@ class OnOffMixin:
         class ActionWebSocket(WebSocketHandler, OnOffMixin):
             "Calls an appropriate 'action' based on the incoming message."
             def __init__(self, *args, **kwargs):
-                super(ActionWebSocket, self).__init__(*args, **kwargs)
+                super().__init__(*args, **kwargs)
                 self.on("ping", self.pong)      # Register a "ping" event
                 self.on("hello", self.heythere) # Register a "hello" event
 
@@ -95,7 +95,8 @@ class OnOffMixin:
     :func:`off`, and :func:`trigger` methods to our `ActionWebSocket` class.
     """
 
-    def __init__(self):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self._on_off_events = {}
         self.exc_info = None
 
